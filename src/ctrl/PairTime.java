@@ -1,6 +1,7 @@
 package ctrl;
 
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 
 public class PairTime {
@@ -33,5 +34,9 @@ public class PairTime {
         return this.beg.equals(pairTime.beg) || this.end.equals(pairTime.end)
                 || this.beg.isBefore(pairTime.end) && (this.end.isAfter(pairTime.end) || this.end.isAfter(pairTime.beg))
                 || this.beg.isAfter(pairTime.beg) && this.end.isBefore(pairTime.end);
+    }
+
+    public long getMinutesLength() {
+        return ChronoUnit.MINUTES.between(beg, end);
     }
 }

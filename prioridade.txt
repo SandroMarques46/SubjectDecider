@@ -2,4 +2,4 @@ TJ,2
 AVE,1
 SO,1
 SI2,2
-DAW,22
+DAW,1

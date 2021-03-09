@@ -25,31 +25,26 @@ public class Controller {
         LinkedList<String> prio = ctrl.getPriorities();
         ArrayList<Node<Classes>> list = ctrl.choose(prio);
         try {
-            ctrl.removeIfConsecutiveNminutes(list, 360);
-            Writer.writeToFileByWeekDays(list, OUTPUT_BYWEEKDAYS_FILE);
-            Writer.writeToFileBySubject(prio, list, OUTPUT_BYSUBJECT_FILE);
+            moveToHead(list);
+            //ctrl.removeIfConsecutiveNminutes(list, 360);
+            //ctrl.removeIfMoreThanNminutes(list, 460);
+            ctrl.removeOutOfRange(list, new PairTime("9:30","23:50"));
+            Writer.writeToFileByWeekDays(prio, list, OUTPUT_BYWEEKDAYS_FILE);
         } catch (Exception e) {
             System.err.println("Error writing to file");
         }
     }
 
-    public void insertDaysOnMap(HashMap<String, LinkedList<PairTime>> hashMap, Node<Classes> t) {
-        if (!hashMap.isEmpty()) hashMap.clear();
-        while (t.previous != null) t = t.previous;
-        while (t != null) {
-            for (ClassInfo p : t.value.info) {
-                if (hashMap.get(p.week_day) == null) {
-                    hashMap.put(p.week_day, new LinkedList<>(Collections.singleton(p.time)));
-                } else {
-                    hashMap.get(p.week_day).add(p.time);
-                }
-            }
-            t = t.next;
+    private static void moveToHead(ArrayList<Node<Classes>> list) {
+        for (int i = 0; i < list.size(); i++) {
+            Node<Classes> head = list.get(i);
+            while (head.previous != null) head = head.previous;
+            list.set(i,head);
         }
     }
 
     /**
-     * Removes from "list" all the Node<Classes> that have consecutive "n" minutes on any week day.
+     * Removes from "list" all the Node<Classes> that have CONSECUTIVE "n" minutes on any week day.
      */
     private void removeIfConsecutiveNminutes(ArrayList<Node<Classes>> list, int n) {
         boolean break_cycle = false;
@@ -61,19 +56,23 @@ public class Controller {
             Node<Classes> head = t;
             while (t.previous != null) t = t.previous;
             while (t != null) {
-                insertDaysOnMap(hashMap, t);
+                insertDaysOnMap(hashMap, t, null);
                 for (String str : days_list) {
                     LinkedList<PairTime> pairTime = hashMap.get(str);
                     if (pairTime != null) {
                         PairTime.order(pairTime);
                         count = 0;
-                        for (int i = 1; i < pairTime.size(); i++) {
+                        boolean first = true;
+                        for (int i = 0; i < pairTime.size(); i++) {
                             PairTime curr = pairTime.get(i);
-                            PairTime prev = pairTime.get(i - 1);
-                            if (curr.beg.equals(prev.end)) { //consecutive classes
-                                count += curr.getMinutesLength() + prev.getMinutesLength();
-                            } else {
-                                count = 0;
+                            count += curr.getMinutesLength();
+                            if (i > 0){ //skip only the first iteration
+                                PairTime prev = pairTime.get(i-1);
+                                if(prev.end.equals(curr.beg)){
+                                    count += curr.getMinutesLength();
+                                } else {
+                                    count = curr.getMinutesLength();
+                                }
                             }
                             if (count >= n) {
                                 nodes_to_remove.add(head);
@@ -97,10 +96,125 @@ public class Controller {
             list.remove(node);
         }
         if (nodes_to_remove.size() == list.size()) {
-            System.err.println("The condition \"remove classes with consecutive " + n + "\" removed everything");
+            System.err.println("The condition \"remove classes with consecutive " + n + "\" minutes removed everything");
         }
-        System.out.println("Classes with over " + n + " minutes removed (" + nodes_to_remove.size() + " elements)");
+        System.out.println("Classes with over " + n + " minutes removed : " + nodes_to_remove.size() + " elements");
         System.out.println("Total is now " + list.size());
+    }
+
+    /**
+     * Removes from "list" all the Node<Classes> that have more than TOTAL "n" minutes on any week day.
+     */
+    private void removeIfMoreThanNminutes(ArrayList<Node<Classes>> list, int n) {
+        boolean break_cycle = false;
+        LinkedList<Node<Classes>> nodes_to_remove = new LinkedList<>();
+        LinkedList<String> days_list = Days.getOrderList();
+        int count;
+        for (Node<Classes> t : list) {
+            HashMap<String, LinkedList<PairTime>> hashMap = new HashMap<>();
+            Node<Classes> head = t;
+            while (t.previous != null) t = t.previous;
+            while (t != null) {
+                insertDaysOnMap(hashMap, t, null);
+                for (String str : days_list) {
+                    LinkedList<PairTime> pairTime = hashMap.get(str);
+                    if (pairTime != null) {
+                        PairTime.order(pairTime);
+                        count = 0;
+                        for (int i = 0; i < pairTime.size(); i++) {
+                            PairTime curr = pairTime.get(i);
+                            count += curr.getMinutesLength();
+                            if (count >= n) {
+                                nodes_to_remove.add(head);
+                                break_cycle = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (break_cycle) {
+                        break;
+                    }
+                }
+                if (break_cycle) {
+                    break_cycle = false;
+                    break;
+                }
+                t = t.next;
+            }
+        }
+        for (Node<Classes> node : nodes_to_remove) {
+            list.remove(node);
+        }
+        if (nodes_to_remove.size() == list.size()) {
+            System.err.println("The condition \"remove classes with more than " + n + "\" minutes removed everything");
+        }
+        System.out.println("Classes with over " + n + " minutes total removed : " + nodes_to_remove.size() + " elements");
+        System.out.println("Total is now " + list.size());
+    }
+
+    private void removeOutOfRange(ArrayList<Node<Classes>> list, PairTime rangePairTime) {
+        boolean break_cycle = false;
+        LinkedList<Node<Classes>> nodes_to_remove = new LinkedList<>();
+        LinkedList<String> days_list = Days.getOrderList();
+        for (Node<Classes> t : list) {
+            HashMap<String, LinkedList<PairTime>> hashMap = new HashMap<>();
+            Node<Classes> head = t;
+            while (t.previous != null) t = t.previous;
+            while (t != null) {
+                insertDaysOnMap(hashMap, t, null);
+                for (String str : days_list) {
+                    LinkedList<PairTime> pairTime = hashMap.get(str);
+                    if (pairTime != null) {
+                        PairTime.order(pairTime);
+                        for (int i = 0; i < pairTime.size(); i++) {
+                            PairTime curr = pairTime.get(i);
+                            if (curr.isOutsideOfRange(rangePairTime)) { //consecutive classes
+                                nodes_to_remove.add(head);
+                                break_cycle = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (break_cycle) {
+                        break;
+                    }
+                }
+                if (break_cycle) {
+                    break_cycle = false;
+                    break;
+                }
+                t = t.next;
+            }
+        }
+        for (Node<Classes> node : nodes_to_remove) {
+            list.remove(node);
+        }
+        if (nodes_to_remove.size() == list.size()) {
+            System.err.println("The condition \"remove classes outside of range " + rangePairTime.toString() + "\" removed everything");
+        }
+        System.out.println("Remove classes outside of range " + rangePairTime.toString() + " removed : " + nodes_to_remove.size() + " elements");
+        System.out.println("Total is now " + list.size());
+    }
+
+    public void insertDaysOnMap(HashMap<String, LinkedList<PairTime>> hashMap, Node<Classes> t, LinkedList<String> subjs) {
+        boolean addSubj = subjs != null;
+        int idx = 0;
+        if (!hashMap.isEmpty()) hashMap.clear();
+        while (t.previous != null) t = t.previous;
+        while (t != null) {
+            for (ClassInfo p : t.value.info) {
+                if(addSubj){
+                    p.time.setSubj(subjs.get(idx));
+                }
+                if (hashMap.get(p.week_day) == null) {
+                    hashMap.put(p.week_day, new LinkedList<>(Collections.singleton(p.time)));
+                } else {
+                    hashMap.get(p.week_day).add(p.time);
+                }
+            }
+            idx++;
+            t = t.next;
+        }
     }
 
     private LinkedList<String> getPriorities() {

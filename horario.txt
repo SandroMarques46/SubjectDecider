@@ -9,9 +9,9 @@ AVE,42D,9:30,12:30,segunda,T,José Luis Falcão Cascalheira
 AVE,42D,17,18:30,quarta,T,José Luis Falcão Cascalheira
 AVE,41N,20,23,segunda,T,Fernando Miguel Santos Lopes de Carvalho
 AVE,41N,18:30,20,quarta,T,Fernando Miguel Santos Lopes de Carvalho
-SO,41D,14,15:30,quarta,T,Jorge Manuel Rodrigues Martins Pião
-SO,41D,11,12:30,quinta,T,Jorge Manuel Rodrigues Martins Pião
-SO,41D,12:30,14,sexta,T,Jorge Manuel Rodrigues Martins Pião
+//SO,41D,14,15:30,quarta,T,Jorge Manuel Rodrigues Martins Pião
+//SO,41D,11,12:30,quinta,T,Jorge Manuel Rodrigues Martins Pião
+//SO,41D,12:30,14,sexta,T,Jorge Manuel Rodrigues Martins Pião
 SO,41N,18:30,20,segunda,T,João Humberto Holbeche Trindade
 SO,41N,20,23,quinta,T,João Humberto Holbeche Trindade
 SO,42D,12:30,14,terca,T,João Humberto Holbeche Trindade
@@ -21,7 +21,9 @@ SI2,51D,15:30,17,quarta,T,Walter Jorge Mendes Vieira
 SI2,51D,15:30,17,sexta,T,Walter Jorge Mendes Vieira
 SI2,51N,18:30,21:30,quinta,T,Afonso dos Santos Remédios
 SI2,51N,18:30,20,sexta,T,Afonso dos Santos Remédios
-DAW,61D,9:30,12:30,terca,T,Pedro Miguel Henriques Santos Félix
-DAW,61D,12:30,14,quarta,T,Pedro Miguel Henriques Santos Félix
+//DAW,61D,9:30,12:30,terca,T,Pedro Miguel Henriques Santos Félix
+//DAW,61D,12:30,14,quarta,T,Pedro Miguel Henriques Santos Félix
 DAW,61N,20,23,segunda,T,Paulo Alexandre Leal Barros Pereira
 DAW,61N,18:30,20,quarta,T,Paulo Alexandre Leal Barros Pereira
+CN,61N,18:30,20,segunda,T,Luís Manuel da Costa Assunção
+CN,61N,20,23,quinta,T,Luís Manuel da Costa Assunção

@@ -22,16 +22,18 @@ public class Controller {
         Controller ctrl = new Controller();
         ctrl.indexPriorities(PRIO_FILE);
         ctrl.indexFromFile(HORARIOS_FILE);
-        LinkedList<String> prio = ctrl.getPriorities();
-        ArrayList<Node<Classes>> list = ctrl.choose(prio);
-        try {
-            moveToHead(list);
-            //ctrl.removeIfConsecutiveNminutes(list, 360);
-            //ctrl.removeIfMoreThanNminutes(list, 460);
-            ctrl.removeOutOfRange(list, new PairTime("9:30","23:50"));
-            Writer.writeToFileByWeekDays(prio, list, OUTPUT_BYWEEKDAYS_FILE);
-        } catch (Exception e) {
-            System.err.println("Error writing to file");
+        LinkedList<LinkedList<String>> prio = ctrl.getPriorities();
+        for (int i = 0; i < prio.size(); i++) {
+            ArrayList<Node<Classes>> list = ctrl.choose(prio.get(i));
+            try {
+                moveToHead(list);
+                ctrl.removeUpToNminutes(list, 360, true);
+                //ctrl.removeUpToNminutes(list, 450,false);
+                ctrl.removeOutOfRange(list, new PairTime("9:30", "23:50"));
+                Writer.writeToFileByWeekDays(prio.get(i), list, OUTPUT_BYWEEKDAYS_FILE);
+            } catch (Exception e) {
+                System.err.println("Error writing to file");
+            }
         }
     }
 
@@ -39,14 +41,15 @@ public class Controller {
         for (int i = 0; i < list.size(); i++) {
             Node<Classes> head = list.get(i);
             while (head.previous != null) head = head.previous;
-            list.set(i,head);
+            list.set(i, head);
         }
     }
 
     /**
      * Removes from "list" all the Node<Classes> that have CONSECUTIVE "n" minutes on any week day.
+     * Removes from "list" all the Node<Classes> that have more than TOTAL "n" minutes on any week day.
      */
-    private void removeIfConsecutiveNminutes(ArrayList<Node<Classes>> list, int n) {
+    private void removeUpToNminutes(ArrayList<Node<Classes>> list, int n, boolean consecutive) {
         boolean break_cycle = false;
         LinkedList<Node<Classes>> nodes_to_remove = new LinkedList<>();
         LinkedList<String> days_list = Days.getOrderList();
@@ -62,17 +65,17 @@ public class Controller {
                     if (pairTime != null) {
                         PairTime.order(pairTime);
                         count = 0;
-                        boolean first = true;
                         for (int i = 0; i < pairTime.size(); i++) {
                             PairTime curr = pairTime.get(i);
-                            count += curr.getMinutesLength();
-                            if (i > 0){ //skip only the first iteration
-                                PairTime prev = pairTime.get(i-1);
-                                if(prev.end.equals(curr.beg)){
+                            if (i > 0 && consecutive) {
+                                PairTime prev = pairTime.get(i - 1);
+                                if (prev.end.equals(curr.beg)) {
                                     count += curr.getMinutesLength();
                                 } else {
                                     count = curr.getMinutesLength();
                                 }
+                            } else {
+                                count += curr.getMinutesLength();
                             }
                             if (count >= n) {
                                 nodes_to_remove.add(head);
@@ -95,60 +98,10 @@ public class Controller {
         for (Node<Classes> node : nodes_to_remove) {
             list.remove(node);
         }
-        if (nodes_to_remove.size() == list.size()) {
+        if (list.isEmpty()) {
             System.err.println("The condition \"remove classes with consecutive " + n + "\" minutes removed everything");
         }
         System.out.println("Classes with over " + n + " minutes removed : " + nodes_to_remove.size() + " elements");
-        System.out.println("Total is now " + list.size());
-    }
-
-    /**
-     * Removes from "list" all the Node<Classes> that have more than TOTAL "n" minutes on any week day.
-     */
-    private void removeIfMoreThanNminutes(ArrayList<Node<Classes>> list, int n) {
-        boolean break_cycle = false;
-        LinkedList<Node<Classes>> nodes_to_remove = new LinkedList<>();
-        LinkedList<String> days_list = Days.getOrderList();
-        int count;
-        for (Node<Classes> t : list) {
-            HashMap<String, LinkedList<PairTime>> hashMap = new HashMap<>();
-            Node<Classes> head = t;
-            while (t.previous != null) t = t.previous;
-            while (t != null) {
-                insertDaysOnMap(hashMap, t, null);
-                for (String str : days_list) {
-                    LinkedList<PairTime> pairTime = hashMap.get(str);
-                    if (pairTime != null) {
-                        PairTime.order(pairTime);
-                        count = 0;
-                        for (int i = 0; i < pairTime.size(); i++) {
-                            PairTime curr = pairTime.get(i);
-                            count += curr.getMinutesLength();
-                            if (count >= n) {
-                                nodes_to_remove.add(head);
-                                break_cycle = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (break_cycle) {
-                        break;
-                    }
-                }
-                if (break_cycle) {
-                    break_cycle = false;
-                    break;
-                }
-                t = t.next;
-            }
-        }
-        for (Node<Classes> node : nodes_to_remove) {
-            list.remove(node);
-        }
-        if (nodes_to_remove.size() == list.size()) {
-            System.err.println("The condition \"remove classes with more than " + n + "\" minutes removed everything");
-        }
-        System.out.println("Classes with over " + n + " minutes total removed : " + nodes_to_remove.size() + " elements");
         System.out.println("Total is now " + list.size());
     }
 
@@ -189,7 +142,7 @@ public class Controller {
         for (Node<Classes> node : nodes_to_remove) {
             list.remove(node);
         }
-        if (nodes_to_remove.size() == list.size()) {
+        if (list.isEmpty()) {
             System.err.println("The condition \"remove classes outside of range " + rangePairTime.toString() + "\" removed everything");
         }
         System.out.println("Remove classes outside of range " + rangePairTime.toString() + " removed : " + nodes_to_remove.size() + " elements");
@@ -203,7 +156,7 @@ public class Controller {
         while (t.previous != null) t = t.previous;
         while (t != null) {
             for (ClassInfo p : t.value.info) {
-                if(addSubj){
+                if (addSubj) {
                     p.time.setSubj(subjs.get(idx));
                 }
                 if (hashMap.get(p.week_day) == null) {
@@ -217,15 +170,33 @@ public class Controller {
         }
     }
 
-    private LinkedList<String> getPriorities() {
+    private LinkedList<LinkedList<String>> getPriorities() {
         LinkedList<String> prio = new LinkedList<>();
         if (!priorities.isEmpty()) {
             for (Integer integer : priorities.keySet()) {
-                LinkedList<String> name = priorities.get(integer);
-                if (name != null) {
-                    prio.addAll(name);
+                LinkedList<String> subjs = priorities.get(integer);
+                if (subjs != null && prio.size() + subjs.size() <= MAX_SUBJECTS) {
+                    prio.addAll(subjs);
+                } else if (subjs != null) {
+                    // prio A,B,C
+                    // subjs = E,F,G
+                    // ou seja deviamos ter 3 listas com ABCDE , ABCDF , ABCDG
+                    LinkedList<LinkedList<String>> total = new LinkedList<>();
+                    int num_pos_to_fill = MAX_SUBJECTS - prio.size();
+                    int combs = subjs.size();
+                    int count = combs;
+                    for (int i = 1; i < num_pos_to_fill; i++) {
+                        count *= --combs;
+                    }
+                    count /= 2; // numero de combinacoes totais
+                    //todo
+                    while(true){
+
+                    }
+                    //break;
                 }
             }
+            return new LinkedList<>(Collections.singleton(prio));
         } else { //if priorities are empty, makes a random selection of number : MAX_SUBJECTS
             int num = MAX_SUBJECTS;
             for (String subj : map.keySet()) {
@@ -233,8 +204,8 @@ public class Controller {
                 else break;
                 num--;
             }
+            return new LinkedList<>(Collections.singleton(prio));
         }
-        return prio;
     }
 
     private void indexPriorities(String prio_file) {

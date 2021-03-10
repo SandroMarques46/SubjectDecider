@@ -48,14 +48,6 @@ public class PairTime {
         });
     }
 
-    public String getBeg() {
-        return beg.toString();
-    }
-
-    public String getEnd() {
-        return end.toString();
-    }
-
     public boolean overlaps(PairTime pairTime) {
         return this.beg.equals(pairTime.beg) || this.end.equals(pairTime.end)
                 || this.beg.isBefore(pairTime.end) && (this.end.isAfter(pairTime.end) || this.end.isAfter(pairTime.beg))

@@ -32,12 +32,17 @@ public class Writer {
                 writeClasses(bw,subjs,t);
                 for (String str : days_list) {
                     LinkedList<PairTime> pairTimes = hashMap.get(str);
-                    bw.write(str + ":");
+                    StringBuilder line = new StringBuilder();
+                    line.append(str).append(":");
                     if (pairTimes != null) {
                         PairTime.order(pairTimes);
+                        int totaltime_day = 0;
                         for (PairTime p : pairTimes) {
-                            bw.write("("+p.getSubj()+")"+p.beg + "-" + p.end + Syntax.SEP);
+                            line.append("(").append(p.getSubj()).append(")").append(p.beg).append("-").append(p.end).append(Syntax.SEP);
+                            totaltime_day += p.getMinutesLength();
                         }
+                        bw.write(line.toString());
+                        bw.write("("+totaltime_day+" mins)");
                     } else {
                         bw.write("---");
                     }

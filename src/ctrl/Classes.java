@@ -14,4 +14,9 @@ public class Classes {
     public void addToList(ClassInfo p){
         info.add(p);
     }
+
+    @Override
+    public String toString() {
+        return turma;
+    }
 }

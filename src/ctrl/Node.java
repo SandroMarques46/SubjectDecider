@@ -22,4 +22,8 @@ public class Node<E> {
         this.next = new Node<>(value);
         this.next.previous = this;
     }
+
+    public boolean isFirst() {
+        return this.previous == null;
+    }
 }

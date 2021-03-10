@@ -10,14 +10,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 public class Writer {
-    public class Pair{
-        String subj;
-        PairTime pairTime;
-        public Pair(String subj, PairTime pairTime){
-            this.subj = subj;
-            this.pairTime = pairTime;
-        }
-    }
+
     public static final String FOLDER = "OUTPUT/";
 
     public static void writeToFileByWeekDays(LinkedList<String> subjs, ArrayList<Node<Classes>> list, String outputFile) throws Exception {
@@ -32,8 +25,8 @@ public class Writer {
                 writeClasses(bw,subjs,t);
                 for (String str : days_list) {
                     LinkedList<PairTime> pairTimes = hashMap.get(str);
+                    bw.write(str+":");
                     StringBuilder line = new StringBuilder();
-                    line.append(str).append(":");
                     if (pairTimes != null) {
                         PairTime.order(pairTimes);
                         int totaltime_day = 0;

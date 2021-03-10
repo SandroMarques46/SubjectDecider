@@ -4,14 +4,11 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 public class Controller {
     private static final String OUTPUT_BYWEEKDAYS_FILE = "byWeekDays.txt";
-    private static final String OUTPUT_BYSUBJECT_FILE = "bySubject.txt";
+    private static final String OUTPUT_LOOP_FILE = "loop.txt";
     private static final int MAX_SUBJECTS = 5;
     private HashMap<Integer, LinkedList<String>> priorities = new HashMap<>();
     private HashMap<String, LinkedList<Classes>> map = new HashMap<>();
@@ -35,7 +32,76 @@ public class Controller {
                 System.err.println("Error writing to file");
             }
         }
+        ctrl.startLoop();
     }
+
+    private void startLoop() {
+        Scanner in = new Scanner(System.in);
+        System.out.println("\nWrite the subjs with a whitespace in between and \"e/E\" to exit ");
+        LinkedList<String> subjs = new LinkedList<>();
+        String subj;
+        while ((subj = in.next()) != null && !subj.equalsIgnoreCase("e") && subjs.size() < MAX_SUBJECTS) {
+            subj = subj.toUpperCase();
+            if (map.get(subj) != null) subjs.add(subj);
+            else System.err.println("No subject found with name " + subj);
+        }
+        in = new Scanner(System.in);
+        System.out.println("Input subjects are : " + subjs.toString());
+        System.out.println("Write the class name with a whitespace in between and \"e/E\" to exit ");
+        String class_name;
+        ArrayList<String> classes = new ArrayList<>();
+        while ((class_name = in.next()) != null && !class_name.equalsIgnoreCase("e") && classes.size() < subjs.size()) {
+            class_name = class_name.toUpperCase();
+            if (class_name.length()==3) classes.add(class_name);
+            else System.err.println("Invalid class " + class_name);
+        }
+        int idx = 0;
+        ArrayList<Node<Classes>> validClasses = new ArrayList<>();
+        Node<Classes> node = new Node<>();
+        for (String sub : subjs) {
+            LinkedList<Classes> list = map.get(sub);
+            Classes cl1;
+            if((cl1 = isValid(classes, idx, list)) == null){
+                do {
+                    System.err.println("Class " + classes.get(idx) + " not found for subject " + sub);
+                    System.out.print("Choose a valid class " + list.toString() + " : ");
+                    String cl = in.next().toUpperCase();
+                    classes.remove(idx);
+                    classes.add(idx, cl);
+                } while ((cl1 = isValid(classes, idx, list)) == null);
+            }
+            if(node.isFirst()){ //todo arranjar node
+                node = new Node<>(cl1);
+            } else {
+                node.addVal(cl1);
+            }
+            idx++;
+            node = node.next;
+        }
+        System.out.println("Input classes are : " + validClasses.toString());
+        removeNonValidCombs(validClasses);
+        if(validClasses.isEmpty()){
+            System.err.println("COMBINATION NOT VALID");
+        } else {
+            System.err.println("VALID , written to : " + OUTPUT_LOOP_FILE);
+            //todo write
+            try {
+                Writer.writeToFileByWeekDays(subjs,validClasses,OUTPUT_LOOP_FILE);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private Classes isValid(ArrayList<String> classesName, int idx, LinkedList<Classes> availableClasses) {
+        for (Classes cl : availableClasses) {
+            if(cl.turma.equals(classesName.get(idx))){
+                return cl;
+            }
+        }
+        return null;
+    }
+
 
     private static void moveToHead(ArrayList<Node<Classes>> list) {
         for (int i = 0; i < list.size(); i++) {
@@ -190,10 +256,7 @@ public class Controller {
                     }
                     count /= 2; // numero de combinacoes totais
                     //todo
-                    while(true){
-
-                    }
-                    //break;
+                    break;
                 }
             }
             return new LinkedList<>(Collections.singleton(prio));
@@ -214,14 +277,16 @@ public class Controller {
             while ((str = fr.readLine()) != null) {
                 String[] parts = str.split(Syntax.SEP);
                 try {
-                    if (priorities.get(Integer.parseInt(parts[1])) == null) {
-                        priorities.put(Integer.valueOf(parts[1]), new LinkedList<>(Collections.singleton(parts[0])));
-                    } else {
-                        LinkedList<String> list_cadeiras = priorities.get(Integer.valueOf(parts[1]));
-                        if (!list_cadeiras.contains(parts[0])) {
-                            list_cadeiras.add(parts[0]);
+                    if (!str.contains(Syntax.LINE_IGNORE_SEP) && str.indexOf(Syntax.LINE_IGNORE_SEP) != 0) {
+                        if (priorities.get(Integer.parseInt(parts[1])) == null) {
+                            priorities.put(Integer.valueOf(parts[1]), new LinkedList<>(Collections.singleton(parts[0])));
                         } else {
-                            throw new DuplicateNameException("Subject \"" + parts[0] + "\" is duplicated on file " + prio_file);
+                            LinkedList<String> list_cadeiras = priorities.get(Integer.valueOf(parts[1]));
+                            if (!list_cadeiras.contains(parts[0])) {
+                                list_cadeiras.add(parts[0]);
+                            } else {
+                                throw new DuplicateNameException("Subject \"" + parts[0] + "\" is duplicated on file " + prio_file);
+                            }
                         }
                     }
                 } catch (IllegalArgumentException e) {
@@ -282,7 +347,7 @@ public class Controller {
     }
 
     /**
-     * Checks if there are subjects overplaced.
+     * Remove all the combinations (nodes list) that have classes overlapped
      */
     private void removeNonValidCombs(ArrayList<Node<Classes>> list) {
         boolean break_cycle = false;

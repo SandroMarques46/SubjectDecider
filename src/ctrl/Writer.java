@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -13,19 +12,18 @@ public class Writer {
 
     public static final String FOLDER = "OUTPUT/";
 
-    public static void writeToFileByWeekDays(LinkedList<String> subjs, ArrayList<Node<Classes>> list, String outputFile) throws Exception {
+    public void writeToFileByWeekDays(LinkedList<String> subjs, ArrayList<Node<Classes>> list, String outputFile, Controller ctrl) throws Exception {
         createFolder();
-        Controller ctrl = new Controller();
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(FOLDER + outputFile))) {
             LinkedList<String> days_list = Days.getOrderList();
             bw.write(Syntax.LINE_IGNORE_SEP + " Number of combinations : " + list.size() + "\n");
             HashMap<String, LinkedList<PairTime>> hashMap = new HashMap<>();
             for (Node<Classes> t : list) {
-                ctrl.insertDaysOnMap(hashMap, t,subjs);
-                writeClasses(bw,subjs,t);
+                ctrl.insertDaysOnMap(hashMap, t, subjs);
+                writeClasses(bw, subjs, t);
                 for (String str : days_list) {
                     LinkedList<PairTime> pairTimes = hashMap.get(str);
-                    bw.write(str+":");
+                    bw.write(str + ":");
                     StringBuilder line = new StringBuilder();
                     if (pairTimes != null) {
                         PairTime.order(pairTimes);
@@ -35,10 +33,16 @@ public class Writer {
                             totaltime_day += p.getMinutesLength();
                         }
                         bw.write(line.toString());
-                        bw.write("("+totaltime_day+" mins)");
+                        bw.write("(" + totaltime_day + " mins)");
                     } else {
                         bw.write("---");
                     }
+                    bw.write("\n");
+                }
+                LinkedList<ClassInfo> classInfoList = ctrl.getClassInfoList(subjs, t);
+                int idx = 0;
+                for (ClassInfo info : classInfoList) {
+                    bw.write(subjs.get(idx++) + ":" + info.prof + "(" + info.type + ")");
                     bw.write("\n");
                 }
                 bw.write("\n\n");
@@ -48,12 +52,12 @@ public class Writer {
         }
     }
 
-    private static void writeClasses(BufferedWriter bw, LinkedList<String> subjs, Node<Classes> t) throws IOException {
+    private void writeClasses(BufferedWriter bw, LinkedList<String> subjs, Node<Classes> t) throws IOException {
         int idx = 0;
-        while (t != null){
+        while (t != null) {
             try {
                 bw.write(subjs.get(idx++) + ":" + t.value.turma + "   ");
-            } catch (ArrayIndexOutOfBoundsException e){
+            } catch (ArrayIndexOutOfBoundsException e) {
                 throw new ArrayIndexOutOfBoundsException("Subjects list is smaller than Node list size!");
             }
             t = t.next;
@@ -61,10 +65,10 @@ public class Writer {
         bw.write("\n");
     }
 
-    private static void createFolder() throws Exception {
+    private void createFolder() throws Exception {
         File directory = new File(FOLDER);
-        if (! directory.exists()){
-            if(!directory.mkdir()){
+        if (!directory.exists()) {
+            if (!directory.mkdir()) {
                 throw new Exception("Something went wron while creating folder : " + FOLDER);
             }
             // If required to make the entire directory path including parents use .mkdirs()

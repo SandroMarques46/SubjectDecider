@@ -19,4 +19,12 @@ public class Classes {
     public String toString() {
         return turma;
     }
+
+    private boolean hasMultiple() { //e.g "41D/42D/51N"
+        return turma.contains("/");
+    }
+
+    public String[] getAllClasses() {
+        return turma.split("/");
+    }
 }

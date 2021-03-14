@@ -1,17 +1,21 @@
 // LINES STARTED WITH // ARE IGNORED
 //FORMAT :
 //NAME,TURMA,BEG. HOUR,END HOUR,WEEK DAY,TIPO,PROF
-TJ,41D,12:30,14,segunda,T,Carlos Manuel Ferreira Pereira dos Santos
-TJ,41D,9:30,12:30,quarta,T,Carlos Manuel Ferreira Pereira dos Santos
+//TJ,42D,12:30,14,segunda,T,Carlos Manuel Ferreira Pereira dos Santos
+//TJ,42D,9:30,12:30,quarta,T,Carlos Manuel Ferreira Pereira dos Santos
+//TJ,61D,12:30,14,segunda,T,Carlos Manuel Ferreira Pereira dos Santos
+//TJ,61D,9:30,12:30,quarta,T,Carlos Manuel Ferreira Pereira dos Santos
+TJ,41D/42D,12:30,14,segunda,T,Carlos Manuel Ferreira Pereira dos Santos
+TJ,41D/42D,9:30,12:30,quarta,T,Carlos Manuel Ferreira Pereira dos Santos
 AVE,41D,9:30,12:30,segunda,T,Fernando Miguel Santos Lopes de Carvalho
 AVE,41D,8,9:30,quarta,T,Fernando Miguel Santos Lopes de Carvalho
 AVE,42D,9:30,12:30,segunda,T,José Luis Falcão Cascalheira
 AVE,42D,17,18:30,quarta,T,José Luis Falcão Cascalheira
 AVE,41N,20,23,segunda,T,Fernando Miguel Santos Lopes de Carvalho
 AVE,41N,18:30,20,quarta,T,Fernando Miguel Santos Lopes de Carvalho
-//SO,41D,14,15:30,quarta,T,Jorge Manuel Rodrigues Martins Pião
-//SO,41D,11,12:30,quinta,T,Jorge Manuel Rodrigues Martins Pião
-//SO,41D,12:30,14,sexta,T,Jorge Manuel Rodrigues Martins Pião
+SO,41D,14,15:30,quarta,T,Jorge Manuel Rodrigues Martins Pião
+SO,41D,11,12:30,quinta,T,Jorge Manuel Rodrigues Martins Pião
+SO,41D,12:30,14,sexta,T,Jorge Manuel Rodrigues Martins Pião
 SO,41N,18:30,20,segunda,T,João Humberto Holbeche Trindade
 SO,41N,20,23,quinta,T,João Humberto Holbeche Trindade
 SO,42D,12:30,14,terca,T,João Humberto Holbeche Trindade

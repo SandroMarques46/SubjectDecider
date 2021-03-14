@@ -11,23 +11,24 @@ public class Controller {
     private static final String OUTPUT_LOOP_FILE = "loop.txt";
     private static final int MAX_SUBJECTS = 5;
     private HashMap<Integer, LinkedList<String>> priorities = new HashMap<>();
-    private HashMap<String, LinkedList<Classes>> map = new HashMap<>();
+    public HashMap<String, LinkedList<Classes>> map = new HashMap<>();
     private static String HORARIOS_FILE = "horario.txt";
     private static String PRIO_FILE = "prioridade.txt";
+    static Controller ctrl;
 
     public static void main(String[] args) throws Exception {
-        Controller ctrl = new Controller();
+        ctrl = new Controller();
+        Writer writer = new Writer();
         ctrl.indexPriorities(PRIO_FILE);
         ctrl.indexFromFile(HORARIOS_FILE);
         LinkedList<LinkedList<String>> prio = ctrl.getPriorities();
         for (int i = 0; i < prio.size(); i++) {
             ArrayList<Node<Classes>> list = ctrl.choose(prio.get(i));
             try {
-                moveToHead(list);
+                moveToHeadList(list);
                 ctrl.removeUpToNminutes(list, 360, true);
-                //ctrl.removeUpToNminutes(list, 450,false);
                 ctrl.removeOutOfRange(list, new PairTime("9:30", "23:50"));
-                Writer.writeToFileByWeekDays(prio.get(i), list, OUTPUT_BYWEEKDAYS_FILE);
+                writer.writeToFileByWeekDays(prio.get(i), list, OUTPUT_BYWEEKDAYS_FILE,ctrl);
             } catch (Exception e) {
                 System.err.println("Error writing to file");
             }
@@ -52,16 +53,17 @@ public class Controller {
         ArrayList<String> classes = new ArrayList<>();
         while ((class_name = in.next()) != null && !class_name.equalsIgnoreCase("e") && classes.size() < subjs.size()) {
             class_name = class_name.toUpperCase();
-            if (class_name.length()==3) classes.add(class_name);
+            if (class_name.length() == 3) classes.add(class_name);
             else System.err.println("Invalid class " + class_name);
         }
         int idx = 0;
         ArrayList<Node<Classes>> validClasses = new ArrayList<>();
         Node<Classes> node = new Node<>();
+        Node<Classes> head = node;
         for (String sub : subjs) {
             LinkedList<Classes> list = map.get(sub);
             Classes cl1;
-            if((cl1 = isValid(classes, idx, list)) == null){
+            if ((cl1 = isValid(classes, idx, list)) == null) {
                 do {
                     System.err.println("Class " + classes.get(idx) + " not found for subject " + sub);
                     System.out.print("Choose a valid class " + list.toString() + " : ");
@@ -70,45 +72,64 @@ public class Controller {
                     classes.add(idx, cl);
                 } while ((cl1 = isValid(classes, idx, list)) == null);
             }
-            if(node.isFirst()){ //todo arranjar node
-                node = new Node<>(cl1);
-            } else {
-                node.addVal(cl1);
-            }
+            node.addVal(cl1);
             idx++;
-            node = node.next;
+            if (node.next != null) node = node.next;
         }
-        System.out.println("Input classes are : " + validClasses.toString());
+        validClasses.add(head);
         removeNonValidCombs(validClasses);
-        if(validClasses.isEmpty()){
+        if (validClasses.isEmpty()) {
             System.err.println("COMBINATION NOT VALID");
         } else {
-            System.err.println("VALID , written to : " + OUTPUT_LOOP_FILE);
-            //todo write
+            System.out.println("COMBINATION VALID , written to : " + OUTPUT_LOOP_FILE);
             try {
-                Writer.writeToFileByWeekDays(subjs,validClasses,OUTPUT_LOOP_FILE);
+                new Writer().writeToFileByWeekDays(subjs, validClasses, OUTPUT_LOOP_FILE,ctrl);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
+    public LinkedList<ClassInfo> getClassInfoList(LinkedList<String> subjs, Node<Classes> t) {
+        Node<Classes> head = moveToHead(t);
+        LinkedList<ClassInfo> list = new LinkedList<>();
+        int idx = 0;
+        while(head!=null){
+            for (Classes cl : map.get(subjs.get(idx++))) {
+                if(cl.turma.equals(head.value.turma)){
+                    list.add(cl.info.getFirst());
+                    //todo only the first because the teacher is (almost) always the same for each different class time
+                    // (but could not be , exemplo LIC that has multiple teachers &| different class types (Teorico or Pratico))
+                }
+            }
+            head = head.next;
+        }
+        return list;
+    }
+
     private Classes isValid(ArrayList<String> classesName, int idx, LinkedList<Classes> availableClasses) {
         for (Classes cl : availableClasses) {
-            if(cl.turma.equals(classesName.get(idx))){
-                return cl;
+            String[] parts = cl.getAllClasses();
+            for (String p : parts) {
+                if (p.equals(classesName.get(idx))) {
+                    return cl;
+                }
             }
         }
         return null;
     }
 
 
-    private static void moveToHead(ArrayList<Node<Classes>> list) {
+    private static void moveToHeadList(ArrayList<Node<Classes>> list) {
         for (int i = 0; i < list.size(); i++) {
             Node<Classes> head = list.get(i);
-            while (head.previous != null) head = head.previous;
-            list.set(i, head);
+            list.set(i, moveToHead(head));
         }
+    }
+
+    private static Node<Classes> moveToHead(Node<Classes> list) {
+        while (list.previous != null) list = list.previous;
+        return list;
     }
 
     /**
@@ -316,15 +337,15 @@ public class Controller {
                             throw new IllegalArgumentException();
                         }
                         ClassInfo p = new ClassInfo(parts[2], parts[3], parts[4], parts[5], parts[6]);
-                        String[] turmasarr = parts[1].split(Syntax.TURMA_SEP);
-                        for (String turma : turmasarr) {
+                        //String[] turmasarr = parts[1].split(Syntax.TURMA_SEP);
+                        //for (String turma : turmasarr) {
                             if (map.get(parts[0]) == null) {
-                                map.put(parts[0], new LinkedList<>(Collections.singletonList(new Classes(turma, new LinkedList<>(Collections.singletonList(p))))));
+                                map.put(parts[0], new LinkedList<>(Collections.singletonList(new Classes(parts[1], new LinkedList<>(Collections.singletonList(p))))));
                             } else {
                                 LinkedList<Classes> list = map.get(parts[0]);
-                                add(list, turma, p);
+                                add(list, parts[1], p);
                             }
-                        }
+                        //}
                     } catch (IllegalArgumentException e) {
                         throw new IllegalArgumentException("Line " + lineNum + " is not valid : " + str);
                     }
@@ -398,7 +419,10 @@ public class Controller {
      */
     private ArrayList<Node<Classes>> findNcombsfromlist(LinkedList<String> subj_list) {
         ArrayList<Node<Classes>> list = new ArrayList<>();
-        createListWithNnodes(list, subj_list.getFirst());
+        String first_subj = subj_list.getFirst();
+        for (Classes t : map.get(first_subj)) {
+            list.add(new Node<>(t));
+        }
         int num_comb = list.size();
         for (int i = 1; i < subj_list.size(); i++) {
             if (map.get(subj_list.get(i)) == null) {
@@ -425,11 +449,6 @@ public class Controller {
         return list;
     }
 
-    private void createListWithNnodes(ArrayList<Node<Classes>> list, String subject) {
-        for (Classes t : map.get(subject)) {
-            list.add(new Node<>(t));
-        }
-    }
 
     private void multiplySizeByN(ArrayList<Node<Classes>> list, int newSize) {
         if (newSize == 1) return;
@@ -442,17 +461,11 @@ public class Controller {
     public static ArrayList<Node<Classes>> makeNewNodeInstance(LinkedList<Node<Classes>> original) {
         ArrayList<Node<Classes>> toReturn = new ArrayList<>();
         for (Node<Classes> node : original) {
-            while (node.previous != null) node = node.previous;
             Node<Classes> newNode = new Node<>();
-            newNode.value = node.value;
-            while (node.next != null) {
-                newNode.addVal(node.next.value);
-                newNode = newNode.next;
-                node = node.next;
-            }
+            newNode.copy(node);
             toReturn.add(newNode);
         }
-        for (int i = 0; i < toReturn.size(); i++) {
+        for (int i = 0; i < toReturn.size(); i++) { //list must have node tails
             Node<Classes> node = toReturn.get(i);
             while (node.next != null) node = node.next;
             toReturn.set(i, node);

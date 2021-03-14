@@ -1,10 +1,15 @@
 // Number of combinations : 1
 AVE:42D   SO:41N   DAW:61N   TJ:41D   SI2:51D
-segunda:(AVE)09:30-12:30,(TJ)12:30-14:00,(SO)18:30-20:00,(DAW)20:00-23:00,
-terca:(SI2)15:30-17:00,
-quarta:(TJ)09:30-12:30,(SI2)15:30-17:00,(AVE)17:00-18:30,(DAW)18:30-20:00,
-quinta:(SO)20:00-23:00,
-sexta:(SI2)15:30-17:00,
+segunda:(AVE)09:30-12:30,(TJ)12:30-14:00,(SO)18:30-20:00,(DAW)20:00-23:00,(540 mins)
+terca:(SI2)15:30-17:00,(90 mins)
+quarta:(TJ)09:30-12:30,(SI2)15:30-17:00,(AVE)17:00-18:30,(DAW)18:30-20:00,(450 mins)
+quinta:(SO)20:00-23:00,(180 mins)
+sexta:(SI2)15:30-17:00,(90 mins)
+AVE:José Luis Falcão Cascalheira(T)
+SO:João Humberto Holbeche Trindade(T)
+DAW:Paulo Alexandre Leal Barros Pereira(T)
+TJ:Carlos Manuel Ferreira Pereira dos Santos(T)
+SI2:Walter Jorge Mendes Vieira(T)
 
 AVE:42D   SO:42D   DAW:61N   TJ:41D   CN:61N
 segunda:(AVE)09:30-12:30,(TJ)12:30-14:00,(CN)18:30-20:00,(DAW)20:00-23:00,(540 mins)

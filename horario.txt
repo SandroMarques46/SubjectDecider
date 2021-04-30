@@ -1,6 +1,6 @@
 // LINES STARTED WITH // ARE IGNORED
 //FORMAT :
-//NAME,TURMA,BEG. HOUR,END HOUR,WEEK DAY,TIPO,PROF
+//NAME,CLASS,BEG. HOUR,END HOUR,WEEK DAY,TYPE,PROF.
 //TJ,42D,12:30,14,segunda,T,Carlos Manuel Ferreira Pereira dos Santos
 //TJ,42D,9:30,12:30,quarta,T,Carlos Manuel Ferreira Pereira dos Santos
 //TJ,61D,12:30,14,segunda,T,Carlos Manuel Ferreira Pereira dos Santos
